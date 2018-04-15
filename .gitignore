@@ -2,6 +2,7 @@ credentials.py
 .idea/
 FDFs/
 PDFs/
+env/
 *.pyc
 *.csv
 *.p
