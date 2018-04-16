@@ -1,0 +1,23 @@
+# Full name or leave empty
+name: 'nitrocode'
+# Full hyphen delimited social security number or leave empty
+social: '000-00-0000'
+# tax year
+year: 2017
+# use turbo tax?
+txf: true
+
+# view only api keys
+# comment out unused exchanges by prefixing lines with a pound sign #
+
+coinbase:
+  key: ''
+  secret: ''
+
+gdax:
+  key: ''
+  secret: ''
+  passphrase: ''
+
+bittrex:
+  file: 'fullOrders.csv'
