@@ -1,60 +1,87 @@
-# This will read in gdax transactions
-import credentials
-from coinbase.wallet.client import Client
-import GDAX
 import dateutil.parser
-import datetime
-import time
+from coinbase.wallet.client import Client
 
 
-def get_client():
-    client = Client(credentials.coinbase_key, credentials.coinbase_secret)
-    return client
+class Coinbase(object):
+    client = None
 
+    def __init__(self, config):
+        """
+        Initialize the client
 
-def get_accounts(client):
-    accounts = client.get_accounts()
-    return accounts
+        :param config: dictionary containing keys `key` and `secret`
+        """
+        try:
+            self.client = Client(config['key'], config['secret'])
+            print('Connected to Coinbase.')
+        except:
+            print('Could not connect to Coinbase.')
 
+    def get_price(self, order_time, product='BTC-USD'):
+        """Gets price for a specific day.
 
-# get the buys and sells for an account
-def get_account_transactions(client, account):
-    buys = []
-    sells = []
-    buys_complex = client.get_buys(account['id'])
-    sells_complex = client.get_sells(account['id'])
-    for order in buys_complex['data']:
+        Unfortunately, it does not allow date and time answers.
+
+        :return:
+        """
+        return self.client.get_spot_price(date=order_time, currency_pair=product)
+
+    def parse_order(self, order, buysell):
+        """
+
+        :param order:
+        :param buysell:
+        :return:
+        """
         order_time = dateutil.parser.parse(order['payout_at'])
         product = order['amount']['currency']
+        exchange_currency = order['total']['currency']
+        currency_pair = '-'.join([order['amount']['currency'], order['total']['currency']])
         cost = float(order['total']['amount'])
         amount = float(order['amount']['amount'])
-        cost_per_coin = cost/amount
-        exchange_currency = order['total']['currency']
-        buys.append([order_time, product, 'buy', cost, amount, cost_per_coin, exchange_currency])
-    for order in sells_complex['data']:
-        # WARNING! This is not tested since I never sell on coinbase (use GDAX instead!)
-        order_time = dateutil.parser.parse(order['payout_at'])
-        product = order['amount']['currency']
-        cost = float(order['total']['amount'])
-        amount = float(order['amount']['amount'])
-        cost_per_coin = cost/amount
-        exchange_currency = order['total']['currency']
-        sells.append([order_time, product, 'sell', cost, amount, cost_per_coin, exchange_currency])
-    return buys, sells
+        cost_per_coin = cost / amount
 
+        return {
+            'order_time': order_time,
+            'product': product,
+            'currency': exchange_currency,
+            'currency_pair': currency_pair,
+            'buysell': buysell,
+            'cost': cost,
+            'amount': amount,
+            'cost_per_coin': cost_per_coin,
+        }
 
-def get_buys_sells():
-    print('Connecting to Coinbase...')
-    client = get_client()
-    print('Connected to Coinbase!')
-    # Get the Coinbase accounts
-    accounts = client.get_accounts()
-    buys = []
-    sells = []
-    for account in accounts['data']:
-        # Only use the USD and BTC accounts since they will contain all transaction ids
-        if account['currency'] != 'USD':
-            buys_dummy, sells_dummy = get_account_transactions(client, account)
-            buys += buys_dummy
-            sells += sells_dummy
-    return buys, sells
+    # get the buys and sells for an account
+    def get_account_transactions(self, account):
+        """
+
+        :param account:
+        :return:
+        """
+        buys = []
+        sells = []
+        buys_complex = self.client.get_buys(account['id'])
+        sells_complex = self.client.get_sells(account['id'])
+        for order in buys_complex['data']:
+            buys.append(self.parse_order(order, 'buy'))
+        for order in sells_complex['data']:
+            sells.append(self.parse_order(order, 'sell'))
+        return buys, sells
+
+    def get_buys_sells(self):
+        """
+
+        :return:
+        """
+        # Get the Coinbase accounts
+        accounts = self.client.get_accounts()
+        buys = []
+        sells = []
+        for account in accounts['data']:
+            # Only use the USD and BTC accounts since they will contain all transaction ids
+            if account['currency'] != 'USD':
+                buys_dummy, sells_dummy = self.get_account_transactions(account)
+                buys += buys_dummy
+                sells += sells_dummy
+        return buys, sells
