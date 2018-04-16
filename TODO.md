@@ -12,6 +12,7 @@
 - [ ] Add Bittrex - currently uses a csv file, seems possible with the api
     * [/account/getorderhistory](https://support.bittrex.com/hc/en-us/articles/115003723911#apireference)
 - [ ] Python3 compatibility
+- [ ] Option to choose between FIFO, LIFO, average cost
 
 # Easy
 
