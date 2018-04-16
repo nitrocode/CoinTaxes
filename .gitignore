@@ -1,7 +1,5 @@
-credentials.py
 .idea/
-FDFs/
-PDFs/
+output/
 env/
 *.pyc
 *.csv
