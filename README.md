@@ -88,12 +88,12 @@ If you find this code useful, feel free to donate!
 
 ## me
 
-BTC: 1LENSt469CoAmZBp1zSvdbSKtCacjSez3i
-LTC: LbweDjdHMaHZJtkjmP11rpC7ftXYfFPKop
-ETH: 0x13fc2D16fC97877Cf6C35A56F8d2e646152cc2e6
-Doge: AEztxkBZ1qBDrye6o3UYphRWPNQHDUYmoW
-BCH: qrf0rve9wjajr4g8h24ed3ff9kx0zqn86vlvmkyn7g
+* BTC: 1LENSt469CoAmZBp1zSvdbSKtCacjSez3i
+* LTC: LbweDjdHMaHZJtkjmP11rpC7ftXYfFPKop
+* ETH: 0x13fc2D16fC97877Cf6C35A56F8d2e646152cc2e6
+* Doge: AEztxkBZ1qBDrye6o3UYphRWPNQHDUYmoW
+* BCH: qrf0rve9wjajr4g8h24ed3ff9kx0zqn86vlvmkyn7g
 
 ## gsugar87
 
-Original developer's crypto wallets are at the [bottom of his repo]](https://github.com/gsugar87/CryptoTaxes).
+Original developer's crypto wallets are at the [bottom of his repo](https://github.com/gsugar87/CryptoTaxes).
