@@ -41,9 +41,13 @@ If using Ubuntu it's easier to install.
 
 Assuming you have API keys for the exchanges you want. Edit `config.yml` and uncomment the exchanges and insert keys, secrets, and passphrases. Fill out your name and social in the file to have that written into the PDF.
 
-Then finally, Run the script
+Then finally, run the script
 
     python CoinTaxes.py
+
+If you have a separate configuration file:
+
+    python CoinTaxes.py --input randy.yml
 
 ### Get the API credentials
 
