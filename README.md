@@ -1,86 +1,103 @@
-# CryptoTaxes
-This will fill out IRS form 8949 with Coinbase, GDAX, and Bittrex data.  It assumes all short term
-sales and will use the highest cost buy order for cost basis.  This will lower the amount
-of taxes you will have to pay.  It will make a .txf that you can import into TurboTax, and
-it will fill out the IRF form 8949.  This has only been tested on Windows.
+# CoinTaxes
 
-Requirements:
+This will fill out IRS form 8949 for the following exchanges:
 
-PDFtk (Make sure it is in your system's path environment variable): 
+* Coinbase
+* GDAX
+* Bittrex data
 
-https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/ 
+It assumes all short term sales and will use the highest cost buy order for cost basis. This will lower the amount of taxes you will have to pay. It will make a .txf that you can import into TurboTax, and it will fill out the IRS form 8949. This has only been tested on Windows.
 
-GDAX Python Library:
+## Enhancements
 
-    pip install GDAX
+This project was forked off of [CryptoTaxes](https://github.com/gsugar87/CryptoTaxes) by gsugar87.
 
-Coinbase Python Library:
+* Cleaned up documentation
+* Converted `credentials.py` to `config.yml`
+* Fixed code
+  * Updated old api functions to new ones
+  * Added cross platform code so it works on Windows, OSX, and Linux
+  * Made structure more flexible by adding exchanges package
+  * Added code docs
+* Renamed so pip package wouldn't confuse with the original project
+* Added an open license
+* See `TODO.md` for more details
 
-    pip install Coinbase
+## Dependencies
 
-fdfgen Python Library:
+### pip dependencies
 
-    pip install fdfgen
+    pip install -r requirements.txt
 
-Instructions:
+### pdf toolkit
 
-In the same directory that you cloned this repository, make a file "credentials.py" that
-contains the following:
+Install [pdftk](https://www.pdflabs.com/tools/pdftk-server/) from a binary and make sure the command `pdftk` is in the path.
 
-    coinbase_key = ''
-    coinbase_secret = ''
-    gdax_key = ''
-    gdax_secret = ''
-    gdax_passphrase = ''
-    
-You will populate this file with your Coinbase and GDAX API Key details.  First, get the 
-Coinbase keys.   You can get the Coinbase keys by logging into your Coinbase
-account and going to https://www.coinbase.com/settings/api and clicking on "+ New API Key."
-A window will pop up and you should check "all" under Accounts and "wallet:accounts:read,"
-"wallet:addresses:read," "wallet:buys:read," "wallet:deposits:read," "wallet:sells:read,"
-"wallet:transactions:read," and "wallet:user:read" under Permissions, and then click Create.  
-A new window will pop up with the API Key Details.  Put the API Key into the coinbaseKey variable
-and the API Secret into the coinbaseSecret variable.  For example if your Coinbase API Key is
-abcdefg1234 and your API Secret is zxcvbasdf1234qwer, then in the credentials.py file you should
-have:
+If using Ubuntu it's easier to install.
 
-    coinbase_key = 'abcdefg1234'
-    coinbase_secret = 'zxcvbasdf1234qwer'
-    
-Next, you need to get the GDAX API Key details.  Sign into GDAX and go to 
-https://www.gdax.com/settings/api Under Permissions, check "View" and then click 
-"Create API Key."  Enter the two-factor authenication code 
-if you are asked for it, and then put the API key, the API secret, and
-the passphrase in the credentials.py file.  Note that the passphrase
-is located in a text box directory under the Permissions area where you checked
-"View."  If the API key is qwerty123, the API secret is poiuyt999, and passphrase is
- mnbvc000, then you should finish filling out the credentials.py file (note that your 
- keys, secrets, and passphases could be longer or shorter than the examples given here):
+    apt-get install pdftk 
+
+## Instructions
+
+Assuming you have API keys for the exchanges you want. Edit `config.yml` and uncomment the exchanges and insert keys, secrets, and passphrases. Fill out your name and social in the file to have that written into the PDF.
+
+Then finally, run the script
+
+    python CoinTaxes.py
+
+If you have a separate configuration file:
+
+    python CoinTaxes.py --input randy.yml
+
+### Get the API credentials
+
+#### Coinbase
+
+1. Sign into your Coinbase account
+2. Go to the [API page](https://www.coinbase.com/settings/api) and click on `New API Key`
+3. In the popup window check `all` under Accounts:
+    * `wallet:accounts:read`
+    * `wallet:addresses:read`
+    * `wallet:buys:read`
+    * `wallet:deposits:read`
+    * `wallet:sells:read`
+    * `wallet:transactions:read`
+    * `wallet:user:read`
+4. Click Create to see the API key and secret.
+5. Insert the API Key into the correct variables in `config.yml` e.g.
+
+        coinbase:
+            key: 'abcdefg1234'
+            secret: 'zxcvbasdf1234qwer'
+
+#### GDAX
+
+1. Sign into GDAX
+2. Go to [API page](https://www.gdax.com/settings/api) and under Permissions, check `View` and then click `Create API Key.`
+3. Enter the two-factor authentication code if you are asked for it
+4. Insert the API creds into the correct variables in `config.yml` e.g.
  
-    coinbase_key = 'abcdefg1234'
-    coinbase_secret = 'zxcvbasdf1234qwer'
-    gdax_key = 'qwerty123'
-    gdax_secret = 'poiuyt999'
-    gdax_passphrase = 'mnbvc000'
-    
- Unfortunately, the Bittrex API does not let you get your entire transaction history via
- an API.  In order to get your entire history, you must login to your Bittrex account, 
- go to https://bittrex.com/History, and then click on "Load All."  This will download 
- your entire history in a csv file called "fullOrders.csv".  Move this file into the 
- CryptoTaxes directory, and it will be read in.
- 
- Once the five variables (coinbase_key, coinbase_secret, gdax_key, gdax_secret, and
- gdax_passphrase) are set in credentials.py and the Bittrex fullOrders.csv has been 
- moved into the CryptoTaxes directory, you can run the program at the command line: 
+        gdax:
+            key: 'qwerty123'
+            secret: 'poiuyt999'
+            passphrase: 'mnbvc000'
 
-    python CryptoTaxes.py
-    
-When you run this, you will be prompted to enter your full name and then your social security 
-number (these are used only for filling out the tax forms).  The filled out form 8949s will be 
-in a new directory called PDFs.
+#### Bittrex
+
+ Unfortunately, the Bittrex API does not let you get your entire transaction history via an API. In order to get your entire history, you must login to your Bittrex account, go to https://bittrex.com/History, and then click on "Load All."  This will download your entire history in a csv file called "fullOrders.csv". Move this file into the CryptoTaxes directory, and it will be read in.
+
+# Donate
 
 If you find this code useful, feel free to donate!
 
-BTC: 1LSTU2pNgeZKeD2CiTNPJRgcnhaUAkjpWJ
+## me
 
-LTC: Ld6CF6LSy3K2PVpdm7qHbpFTarcVxdzE3L
+* BTC: 1LENSt469CoAmZBp1zSvdbSKtCacjSez3i
+* LTC: LbweDjdHMaHZJtkjmP11rpC7ftXYfFPKop
+* ETH: 0x13fc2D16fC97877Cf6C35A56F8d2e646152cc2e6
+* Doge: AEztxkBZ1qBDrye6o3UYphRWPNQHDUYmoW
+* BCH: qrf0rve9wjajr4g8h24ed3ff9kx0zqn86vlvmkyn7g
+
+## gsugar87
+
+Original developer's crypto wallets are at the [bottom of his repo](https://github.com/gsugar87/CryptoTaxes).
