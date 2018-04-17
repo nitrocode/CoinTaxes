@@ -154,12 +154,16 @@ def makePDF(fifoResult, fname, person, social):
             fields.append(("topmostSubform[0].Page1[0].c1_1[2]", 3))
             # save the file and reset the counter
             fdf = forge_fdf("", fields, [], [], [])
-            with open(fpath + "_%03d.fdf" % fileCounter, "w") as fdf_file:
+            with open(fpath + "_%03d.fdf" % fileCounter, "wb") as fdf_file:
                 fdf_file.write(fdf)
 
             # call PDFTK to make the PDF
-            os.system("pdftk " + irs_form + " fill_form " + fpath + "_%03d.fdf" % fileCounter + " output " +
-                      fpath + "_%03d.pdf" % fileCounter)
+            fdf_path = fpath + "_%03d.fdf" % fileCounter
+            pdf_path = fpath + "_%03d.pdf" % fileCounter
+            pdftk_cmd = "pdftk " + irs_form + " fill_form " + fdf_path + " output " + pdf_path
+            print(pdftk_cmd)
+            os.system(pdftk_cmd)
+            # os.remove(fdf_path)
 
             counter = 0
             fileCounter += 1
