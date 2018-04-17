@@ -27,7 +27,9 @@ This project was forked off of [CryptoTaxes](https://github.com/gsugar87/CryptoT
 
 ### pip dependencies
 
-    pip install -r requirements.txt
+Using the recommended [pipenv](https://docs.pipenv.org)
+
+    pipenv install
 
 ### pdf toolkit
 
