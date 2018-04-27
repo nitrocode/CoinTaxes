@@ -5,3 +5,5 @@ env/
 *.csv
 *.p
 *.txf
+# just in case, ignore the config.yml file so its not accidentally committed
+config.yml
