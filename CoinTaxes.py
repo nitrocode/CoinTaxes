@@ -47,19 +47,50 @@ def fix_orders(exchange, buys, sells):
                 if product == 'BCC':
                     product = 'BCH'
                 if order['buysell'] == 'buy':
-                    buys_fixed.append([
-                        order['order_time'], product, 'buy', cost_usd, order['amount'], cost_per_coin_usd, 'USD'
-                    ])
-                    sells_fixed.append([
-                        order['order_time'], 'BTC', 'sell', cost_usd, order['cost'], price_usd, 'USD'
-                    ])
+                    buys_fixed.append({
+                        'order_time': order['order_time'],
+                        'product': product,
+                        'currency': 'USD',
+                        'currency_pair': product + '-USD', # TODO: review
+                        'buysell': 'buy',
+                        'cost': cost_usd,
+                        'amount': order['amount'],
+                        'cost_per_coin': cost_per_coin_usd,
+                    })
+                    sells_fixed.append({
+                        'order_time': order['order_time'],
+                        'product': 'BTC',
+                        'currency': 'USD',
+                        'currency_pair': 'BTC-USD', # TODO: review
+                        'buysell': 'sell',
+                        'cost': cost_usd,
+                        'amount': order['cost'],
+                        'cost_per_coin': price_usd,
+                    })
+                    # was order['order_time'], 'BTC', 'sell', cost_usd, order['cost'], price_usd, 'USD'
                 elif order['buysell'] == 'sell':
-                    sells_fixed.append([
-                        order['order_time'], product, 'sell', cost_usd, order['amount'], cost_per_coin_usd, 'USD'
-                    ])
-                    buys_fixed.append([
-                        order['order_time'], 'BTC', 'buy', cost_usd, order['cost'], price_usd, 'USD'
-                    ])
+                    sells_fixed.append({
+                        'order_time': order['order_time'],
+                        'product': product,
+                        'currency': 'USD',
+                        'currency_pair': product + '-USD', # TODO: review
+                        'buysell': 'sell',
+                        'cost': cost_usd,
+                        'amount': order['cost'],
+                        'cost_per_coin': price_usd,
+                    })
+                    # was order['order_time'], product, 'sell', cost_usd, order['amount'], cost_per_coin_usd, 'USD'
+                    buys_fixed.append({
+                        'order_time': order['order_time'],
+                        'product': 'BTC',
+                        'currency': 'USD',
+                        'currency_pair': 'BTC-USD', # TODO: review
+                        'buysell': 'buy',
+                        'cost': cost_usd,
+                        'amount': order['cost'],
+                        'cost_per_coin': price_usd,
+                    })
+                    # was order['order_time'], 'BTC', 'buy', cost_usd, order['cost'], price_usd, 'USD'
                 else:
                     print("WEIRD! Unknown order buy sell type!")
                     print(order)
@@ -130,8 +161,16 @@ def main():
     #     buys_fixed += b
     #     sells_fixed += s
 
+    def debug_order(order):
+        if type(order) is list:
+            print(order)
+            print(order['order_time'])
+            print(type(order['order_time']))
+        return order['order_time']
+
     # sort the buys and sells by date
     print('Sorting the buy and sell orders by time')
+    # buys_sorted = sorted(buys, key=lambda buy_order: debug_order(buy_order))
     buys_sorted = sorted(buys, key=lambda buy_order: buy_order['order_time'])
     sells_sorted = sorted(sells, key=lambda buy_order: buy_order['order_time'])
 

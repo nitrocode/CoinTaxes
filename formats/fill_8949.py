@@ -67,7 +67,8 @@ def get_cost_basis(sells_sorted, buys_sorted, basis_type='highest', tax_year=201
                 max_cost_volume = sell_order['amount']
             # See if the max cost volume is still negative
             if max_cost_volume < 0:
-                print("WARNING! COULD NOT FIND A COST BASIS FOR sell_index=%d!" % sell_index)
+                print("WARNING! COULD NOT FIND A COST BASIS FOR foloowing sell order:")
+                # print("WARNING! COULD NOT FIND A COST BASIS FOR sell_index=%d!" % sell_index)
                 print(sell_order)
                 count = 1
             else:

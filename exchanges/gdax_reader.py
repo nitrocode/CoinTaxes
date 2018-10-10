@@ -67,6 +67,11 @@ class Gdax(object):
             print('Order status is not done! (WEIRD)')
             print(order)
 
+        # if type(dateutil.parser.parse(order['done_at'])) is str:
+        #     print(dateutil.parser.parse(order['done_at']))
+        #     print(type(dateutil.parser.parse(order['done_at'])))
+        #     sys.exit(0)
+
         return {
             'order_time': dateutil.parser.parse(order['done_at']),
             'product': product,
@@ -120,7 +125,7 @@ class Gdax(object):
         :return:
         """
         history = self.client.get_product_historic_rates(
-            product=product,
+            product_id=product,
             start=order_time - datetime.timedelta(hours=1),
             end=order_time
         )
