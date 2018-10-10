@@ -1,12 +1,14 @@
-import dateutil.parser
+from dateutil import parser as date_parser
 import os
 from fdfgen import forge_fdf
+
 
 FORKED_LIST = ['BCH', 'BCC', 'BGD']
 
 
 def get_forked_time(product):
     """
+    TODO: find a better way to do this
 
     :param product:
     :return:
@@ -22,6 +24,7 @@ def get_forked_time(product):
 
 def get_cost_basis(sells_sorted, buys_sorted, basis_type='highest', tax_year=2017):
     """
+    TODO: clean up and break up code
 
     :param sells_sorted:
     :param buys_sorted:
@@ -29,15 +32,14 @@ def get_cost_basis(sells_sorted, buys_sorted, basis_type='highest', tax_year=201
     :param tax_year:
     :return:
     """
-    start_year = dateutil.parser.parse('%d/1/1 00:00:00Z' % tax_year)
-    end_year = dateutil.parser.parse('%d/1/1 00:00:00Z' % (tax_year + 1))
+    start_year = date_parser.parse(f'{tax_year}/1/1 00:00:00Z')
+    end_year = date_parser.parse(f'{tax_year + 1}/1/1 00:00:00Z')
     full_orders = []
     # Loop through the sell orders and find the best cost basis
     # for sell_index in range(len(sells_sorted)):
-    for sell_order in sells_sorted:
-        # sell_order = sells_sorted[sell_index]
+    for sell_index, sell_order in enumerate(sells_sorted):
         sell_time = sell_order['order_time']
-        product = sell_order['product']
+        product = sell_order['product'].upper()
         # Loop through the buy index to get the cost basis
         # Create a cost basis and subtract sell volume
         # Continue looping until sell volume goes away
@@ -47,8 +49,7 @@ def get_cost_basis(sells_sorted, buys_sorted, basis_type='highest', tax_year=201
             max_cost_index = -1
             max_cost = 0
             max_cost_volume = -1
-            for buy_index in range(len(buys_sorted)):
-                buy_order = buys_sorted[buy_index]
+            for buy_index, buy_order in enumerate(buys_sorted):
                 # See if the buy is the correct product and earlier than the sell time and there are coins left
                 if (buy_order['product'] == product) and (sell_time >= buy_order['order_time']) and \
                         (buy_order['amount'] > 0):
@@ -63,11 +64,10 @@ def get_cost_basis(sells_sorted, buys_sorted, basis_type='highest', tax_year=201
                 print("Found a forked coin")
                 print(sell_order)
                 # Set forked coin cost basis (0)
-                max_cost = 0
                 max_cost_volume = sell_order['amount']
             # See if the max cost volume is still negative
             if max_cost_volume < 0:
-                print("WARNING! COULD NOT FIND A COST BASIS FOR sell_index=%d!" % sell_index)
+                print(f"WARNING! COULD NOT FIND A COST BASIS FOR sell_index={sell_index}!")
                 print(sell_order)
                 count = 1
             else:
@@ -86,107 +86,117 @@ def get_cost_basis(sells_sorted, buys_sorted, basis_type='highest', tax_year=201
                 sell_order['amount'] = round(sell_order['amount'] - cost_basis_volume, 8)
 
                 # Full order [description, date acquired, date sold, proceeds, cost basis, gain/loss]
-                full_orders.append(['%1.8f ' % cost_basis_volume + product,
-                                    bought_time,
-                                    sell_order['order_time'].strftime('%m/%d/%Y'),
-                                    cost_basis_volume * sell_order['cost_per_coin'],
-                                    cost_basis_volume * cost_basis_per_coin,
-                                    cost_basis_volume * (sell_order['cost_per_coin'] - cost_basis_per_coin)])
+                full_orders.append([
+                    f'{cost_basis_volume:.8f} {product}',
+                    bought_time,
+                    sell_order['order_time'].strftime('%m/%d/%Y'),
+                    cost_basis_volume * sell_order['cost_per_coin'],
+                    cost_basis_volume * cost_basis_per_coin,
+                    cost_basis_volume * (sell_order['cost_per_coin'] - cost_basis_per_coin)
+                ])
     return full_orders
 
 
-def makePDF(fifoResult, fname, person, social):
-    """
+def add_field(row, col, value):
+    """Using a row and column add a fdf field value"""
+    return f'topmostSubform[0].Page1[0].Table_Line1[0].Row{row}[0].f1_{col}[0]', value
 
-    :param fifoResult:
-    :param fname:
-    :param person:
-    :param social:
+
+def add_last_field(col, value):
+    """Using a column add a fdf field value at the bottom"""
+    return f'topmostSubform[0].Page1[0].f1_{col}[0]', f'{value:.2f}'
+
+
+def run_pdftk(main_pdf, file_name, fields, count):
+    """Runs pdftk command"""
+    file_path = os.path.join('output', file_name)
+    irs_form = os.path.join('forms', main_pdf)
+
+    fdf = forge_fdf("", fields, [], [], [])
+
+    base_name = f'{file_path}_{count}'
+    fdf_path = f'{base_name}.fdf'
+    pdf_path = f'{base_name}.pdf'
+
+    with open(fdf_path, "wb") as fdf_file:
+        fdf_file.write(fdf)
+
+    pdftk_cmd = f'pdftk {irs_form} fill_form {fdf_path} output {pdf_path}'
+    os.system(pdftk_cmd)
+    print(pdftk_cmd)
+
+
+def make_pdf(fifo_result, file_name, name_of_person, social_security_number, year):
+    """
+    TODO: break up code
+
+    :param fifo_result: gigantic multidimensional array containing
+    
+    [
+        [
+            'description of property',
+            'date acquired',
+            'date sold',
+            'sales price',
+            'cost or other basis',
+            'gain or loss'
+        ]
+    ] 
+    
+    :param file_name:
+    :param name_of_person:
+    :param social_security_number:
     :return:
     """
-    # Write to the PDF
+    max_rows = 14
+    max_cols = 8
+    file_count = 0
+    fields = [
+        ('topmostSubform[0].Page1[0].f1_1[0]', name_of_person),
+        ('topmostSubform[0].Page1[0].f1_2[0]', social_security_number)
+    ]
+    # unsure how this is computed...
+    field_nums = [3 + row * max_cols for row in range(max_rows)]
 
-    fpath = os.path.join('output', fname)
-    irs_form = os.path.join('forms', 'f8949.pdf')
-
-    counter = 0
-    fileCounter = 0
-    fields = [('topmostSubform[0].Page1[0].f1_1[0]', person),
-              ('topmostSubform[0].Page1[0].f1_2[0]', social)]
-    fnums = [3 + i * 8 for i in range(14)]
-    lastRow1 = 0
-    lastRow2 = 0
-    lastRow3 = 0
-    lastRow4 = 0
+    # initialize
+    last_row = [0, 0, 0, 0]
+    # row number for the current pdf. resets on new pdf.
+    row = 0
     # loop through all FIFO sales
-    for sale in fifoResult:
-        counter += 1
+    for idx, sale in enumerate(fifo_result):
+        row += 1
         # append to the form
-        row = counter
-        fnum = fnums[row - 1]
-        fields.append(('topmostSubform[0].Page1[0].Table_Line1[0].Row%d[0].f1_%d[0]' % (row, fnum), sale[0]))
-        fields.append(('topmostSubform[0].Page1[0].Table_Line1[0].Row%d[0].f1_%d[0]' % (row, fnum + 1), sale[1]))
-        fields.append(('topmostSubform[0].Page1[0].Table_Line1[0].Row%d[0].f1_%d[0]' % (row, fnum + 2), sale[2]))
-        fields.append(
-            ('topmostSubform[0].Page1[0].Table_Line1[0].Row%d[0].f1_%d[0]' % (row, fnum + 3), "%1.2f" % sale[3]))
-        fields.append(
-            ('topmostSubform[0].Page1[0].Table_Line1[0].Row%d[0].f1_%d[0]' % (row, fnum + 4), "%1.2f" % sale[4]))
-        if (sale[3] - sale[4]) < 0:
-            fields.append(('topmostSubform[0].Page1[0].Table_Line1[0].Row%d[0].f1_%d[0]' % (row, fnum + 7),
-                           "(%1.2f)" % (sale[4] - sale[3])))
-        else:
-            fields.append(('topmostSubform[0].Page1[0].Table_Line1[0].Row%d[0].f1_%d[0]' % (row, fnum + 7),
-                           "%1.2f" % (sale[3] - sale[4])))
-
-        lastRow1 += float("%1.2f" % sale[3])
-        lastRow2 += float("%1.2f" % sale[4])
-        lastRow3 += 0
-        lastRow4 += float("%1.2f" % (sale[3] - sale[4]))
-
-        # create a new pdf
-        if row == 14 or sale == fifoResult[-1]:
-            fields.append(("topmostSubform[0].Page1[0].f1_115[0]", "%1.2f" % lastRow1))
-            fields.append(("topmostSubform[0].Page1[0].f1_116[0]", "%1.2f" % lastRow2))
-            if lastRow4 < 0:
-                fields.append(("topmostSubform[0].Page1[0].f1_118[0]", "(%1.2f)" % abs(lastRow4)))
+        field_num = field_nums[idx - 1]
+        for i in range(5):
+            if type(sale[i]) == float:
+                sale_tmp = f'{sale[i]:.2f}'
             else:
-                fields.append(("topmostSubform[0].Page1[0].f1_118[0]", "%1.2f" % lastRow4))
-            fields.append(("topmostSubform[0].Page1[0].c1_1[2]", 3))
-            # save the file and reset the counter
-            fdf = forge_fdf("", fields, [], [], [])
-            with open(fpath + "_%03d.fdf" % fileCounter, "wb") as fdf_file:
-                fdf_file.write(fdf)
+                sale_tmp = sale[i]
+            fields.append(add_field(idx, field_num + i, sale_tmp))
 
-            # call PDFTK to make the PDF
-            fdf_path = fpath + "_%03d.fdf" % fileCounter
-            pdf_path = fpath + "_%03d.pdf" % fileCounter
-            pdftk_cmd = "pdftk " + irs_form + " fill_form " + fdf_path + " output " + pdf_path
-            print(pdftk_cmd)
-            os.system(pdftk_cmd)
-            # os.remove(fdf_path)
+        if (sale[3] - sale[4]) < 0:
+            fields.append(add_field(idx, field_num + 7, f'{sale[4] - sale[3]:.2f}'))
+        else:
+            fields.append(add_field(idx, field_num + 7, f'{sale[3] - sale[4]:.2f}'))
 
-            counter = 0
-            fileCounter += 1
+        last_row[0] += sale[3]
+        last_row[1] += sale[4]
+        last_row[3] += sale[3] - sale[4]
+
+        # create a new pdf if its the last row on the form or the sale is the last
+        if row == max_rows or idx == len(fifo_result) - 1:
+            fields.append(add_last_field(115, last_row[0]))
+            fields.append(add_last_field(116, last_row[1]))
+            if last_row[3] < 0:
+                fields.append(add_last_field(118, abs(last_row[3])))
+            else:
+                fields.append(add_last_field(118, last_row[3]))
+            fields.append(add_last_field("topmostSubform[0].Page1[0].c1_1[2]", 3))
+
+            # save the file and reset the idx
+            run_pdftk(f'f8949_{year}.pdf', file_name, fields, file_count)
+            file_count += 1
+
+            # reset fields
             fields = []
-            lastRow1 = 0
-            lastRow2 = 0
-            lastRow3 = 0
-            lastRow4 = 0
-
-# # Make the pdfs
-# if not os.path.exists("FDFs"):
-#     os.makedirs("FDFs")
-# if not os.path.exists("PDFs"):
-#     os.makedirs("PDFs")
-#
-# bFIFO = FIFO(btcBoughtSorted, btcSold, "bitcoin")
-# eFIFO = FIFO(ethBoughtSorted, ethSold, "ethereum")
-# lFIFO = FIFO(ltcBoughtSorted, ltcSold, "litecoin")
-#
-# print('Filling out the 8949 forms...')
-# makePDF(bFIFO, "bitcoin", myname, ss)
-# makePDF(eFIFO, "ethereum", myname, ss)
-# makePDF(lFIFO, "litecoin", myname, ss)
-# # delete the FDFs directory
-# os.system("rmdir FDFs")
-# print('Done!')
+            last_row = [0, 0, 0, 0]

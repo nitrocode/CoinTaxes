@@ -1,9 +1,10 @@
 import datetime
-import dateutil.parser
+from dateutil import parser as date_parser
 import gdax
+from exchanges import Exchange
 
 
-class Gdax(object):
+class Gdax(Exchange):
     client = None
 
     def __init__(self, config):
@@ -68,7 +69,7 @@ class Gdax(object):
             print(order)
 
         return {
-            'order_time': dateutil.parser.parse(order['done_at']),
+            'order_time': date_parser.parse(order['done_at']),
             'product': product,
             'currency': exchange_currency,
             'currency_pair': order['product_id'],

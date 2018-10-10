@@ -1,7 +1,8 @@
 from geminipy import Geminipy
+from exchanges import Exchange
 
 
-class Gemini(object):
+class Gemini(Exchange):
     client = None
 
     def __init__(self, config):

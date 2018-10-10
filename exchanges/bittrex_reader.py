@@ -2,11 +2,11 @@
 # Note that you must supply the fullOrders.csv file
 # This only works with BTC transactions!!!!
 import csv
+from dateutil import parser as date_parser
+from exchanges import Exchange
 
-import dateutil.parser
 
-
-class Bittrex(object):
+class Bittrex(Exchange):
     client = None
     order_file = None
 
@@ -28,20 +28,20 @@ class Bittrex(object):
         pair = order['product_id'].split('-')
         product = pair[0]
         exchange_currency = pair[1]
-        amount = float(order['cost'])
-        fees = float(order[5])
+        amount = order['cost']
+        fees = order[5]
         if 'SELL' in order['buysell']:
             buysell = 'sell'
-            cost = float(order[6]) - fees
+            cost = order[6] - fees
         elif 'BUY' in order['buysell']:
             buysell = 'buy'
-            cost = float(order[6]) + fees
+            cost = order[6] + fees
         else:
             print('UNKNOWN BUY/SELL ORDER!!')
             print(order)
             return {}
         cost_per_coin = cost / amount
-        order_time = dateutil.parser.parse(order[8] + " UTC")
+        order_time = date_parser.parse(f'{order[8]} UTC')
         return {
             'order_time': order_time,
             'product': product,

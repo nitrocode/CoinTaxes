@@ -1,8 +1,9 @@
-import dateutil.parser
+from dateutil import parser as date_parser
 from coinbase.wallet.client import Client
+from exchanges import Exchange
 
 
-class Coinbase(object):
+class Coinbase(Exchange):
     client = None
 
     def __init__(self, config):
@@ -33,7 +34,7 @@ class Coinbase(object):
         :param buysell:
         :return:
         """
-        order_time = dateutil.parser.parse(order['payout_at'])
+        order_time = date_parser.parse(order['payout_at'])
         product = order['amount']['currency']
         exchange_currency = order['total']['currency']
         currency_pair = '-'.join([order['amount']['currency'], order['total']['currency']])
