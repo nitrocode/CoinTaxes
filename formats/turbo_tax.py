@@ -20,7 +20,7 @@ def make_txf(full_orders, output_dir='output', year=2017):
             # text_file.write("D" + order['product_id'] + "\n")
             # text_file.write("D" + order['buysell'] + "\n")
             # text_file.write("$%.2f\n" % order['amount'])
-            text_file.write("$" + order[0] + "\n")
+            text_file.write("P" + order[0] + "\n")
             text_file.write("D" + order[1] + "\n")
             text_file.write("D" + order[2] + "\n")
             text_file.write("$%.2f\n" % order[4])

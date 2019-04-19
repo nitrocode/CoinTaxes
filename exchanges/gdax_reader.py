@@ -121,7 +121,7 @@ class Gdax(Exchange):
         :return:
         """
         history = self.client.get_product_historic_rates(
-            product=product,
+            product_id=product,
             start=order_time - datetime.timedelta(hours=1),
             end=order_time
         )
