@@ -104,8 +104,10 @@ def add_field(row, col, value):
 
 def add_last_field(col, value):
     """Using a column add a fdf field value at the bottom"""
-    return f'topmostSubform[0].Page1[0].f1_{col}[0]', f'{value:.2f}'
-
+    if value < 0:
+        return f'topmostSubform[0].Page1[0].f1_{col}[0]', f'({abs(value):.2f})'
+    else:
+        return f'topmostSubform[0].Page1[0].f1_{col}[0]', f'{value:.2f}'
 
 def run_pdftk(main_pdf, file_name, fields, count):
     """Runs pdftk command"""
@@ -166,18 +168,20 @@ def make_pdf(fifo_result, file_name, name_of_person, social_security_number, yea
     for idx, sale in enumerate(fifo_result):
         row += 1
         # append to the form
-        field_num = field_nums[idx - 1]
+        # field_num = field_nums[idx - 1]
+        # print(f"idx={row}!" )
+        field_num = field_nums[row-1]
         for i in range(5):
             if type(sale[i]) == float:
                 sale_tmp = f'{sale[i]:.2f}'
             else:
                 sale_tmp = sale[i]
-            fields.append(add_field(idx, field_num + i, sale_tmp))
+            fields.append(add_field(row, field_num + i, sale_tmp))
 
         if (sale[3] - sale[4]) < 0:
-            fields.append(add_field(idx, field_num + 7, f'{sale[4] - sale[3]:.2f}'))
+            fields.append(add_field(row, field_num + 7, f'({sale[4] - sale[3]:.2f})'))
         else:
-            fields.append(add_field(idx, field_num + 7, f'{sale[3] - sale[4]:.2f}'))
+            fields.append(add_field(row, field_num + 7, f'{sale[3] - sale[4]:.2f}'))
 
         last_row[0] += sale[3]
         last_row[1] += sale[4]
@@ -188,10 +192,10 @@ def make_pdf(fifo_result, file_name, name_of_person, social_security_number, yea
             fields.append(add_last_field(115, last_row[0]))
             fields.append(add_last_field(116, last_row[1]))
             if last_row[3] < 0:
-                fields.append(add_last_field(118, abs(last_row[3])))
+                fields.append(add_last_field(118, last_row[3]))
             else:
                 fields.append(add_last_field(118, last_row[3]))
-            fields.append(add_last_field("topmostSubform[0].Page1[0].c1_1[2]", 3))
+            fields.append(("topmostSubform[0].Page1[0].c1_1[2]", 3))
 
             # save the file and reset the idx
             run_pdftk(f'f8949_{year}.pdf', file_name, fields, file_count)
@@ -200,3 +204,4 @@ def make_pdf(fifo_result, file_name, name_of_person, social_security_number, yea
             # reset fields
             fields = []
             last_row = [0, 0, 0, 0]
+            row = 0
