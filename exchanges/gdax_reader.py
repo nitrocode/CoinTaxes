@@ -1,6 +1,6 @@
 import datetime
 from dateutil import parser as date_parser
-import gdax
+import cbpro as gdax
 from exchanges import Exchange
 
 
@@ -29,20 +29,19 @@ class Gdax(Exchange):
         :param ignore_products:
         :return:
         """
-        order_ids = []
-        for history_group in history:
-            for transaction in history_group:
-                if 'order_id' in transaction['details'] and 'product_id' in transaction['details']:
-                    if transaction['details']['order_id'] not in order_ids and \
-                            transaction['details']['product_id'] not in ignore_products:
-                        order_ids.append(transaction['details']['order_id'])
-                elif 'source' in transaction['details'] and transaction['details']['source'] == 'fork':
-                    # this was a forked coin deposit
-                    print(transaction['amount'] + transaction['details']['ticker'] + " obtained from a fork.")
-                elif 'transfer_id' not in transaction['details']:
-                    print("No order_id or transfer_id in details for the following order (WEIRD!)")
-                    print(transaction)
-        return order_ids
+        order_ids = {}
+        for transaction in history:
+            if 'order_id' in transaction['details'] and 'product_id' in transaction['details']:
+                if transaction['details']['order_id'] not in order_ids and \
+                        transaction['details']['product_id'] not in ignore_products:
+                    order_ids[transaction['details']['order_id']] = 1
+            elif 'source' in transaction['details'] and transaction['details']['source'] == 'fork':
+                # this was a forked coin deposit
+                print(transaction['amount'] + transaction['details']['ticker'] + " obtained from a fork.")
+            elif 'transfer_id' not in transaction['details']:
+                print("No order_id or transfer_id in details for the following order (WEIRD!)")
+                print(transaction)
+        return list(order_ids.keys())
 
     def parse_order(self, order):
         """
