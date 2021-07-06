@@ -145,14 +145,17 @@ def main():
     for exchange_name in exchanges_supported:
         # instantiate the exchange and aggregate the buys and sells
         if exchange_name in config:
-            exchange = get_exchange(exchange_name, config[exchange_name])
-            if exchange_name == 'bittrex':
-                exchange_buys, exchange_sells = exchange.get_buys_sells(order_file=config['bittrex']['file'])
-            else:
-                exchange_buys, exchange_sells = exchange.get_buys_sells()
-            exchange_buys, exchange_sells = fix_orders(exchange, exchange_buys, exchange_sells)
-            buys += exchange_buys
-            sells += exchange_sells
+            # exchange = get_exchange(exchange_name, config[exchange_name])
+            with get_exchange(exchange_name, config[exchange_name]) as exchange:
+                if exchange_name == 'bittrex':
+                    exchange_buys, exchange_sells = exchange.get_buys_sells(order_file=config['bittrex']['file'])
+                else:
+                    exchange_buys, exchange_sells = exchange.get_buys_sells()
+                exchange_buys, exchange_sells = fix_orders(exchange, exchange_buys, exchange_sells)
+                buys += exchange_buys
+                sells += exchange_sells
+
+    print("Done retreiving data from exchanges")
 
     # sort the buys and sells by date
     buys_sorted = sorted(buys, key=lambda buy_order: buy_order['order_time'])
