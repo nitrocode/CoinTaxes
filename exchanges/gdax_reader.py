@@ -8,18 +8,29 @@ class Gdax(Exchange):
     client = None
 
     def __init__(self, config):
+        self.config = config
         """
 
         :param config:
         """
-        # connect to GDAX on import
+        self.client = self.get_cached_client('gdax')
+
+    def get_client(self):
+        """
+        Get real connected client
+
+        :param config:
+        :return:
+        """
+        client = None
         try:
-            self.client = gdax.AuthenticatedClient(
-                config['key'], config['secret'], config['passphrase']
-            )
             print('Connected to GDAX.')
+            client = gdax.AuthenticatedClient(
+                self.config['key'], self.config['secret'], self.config['passphrase']
+            )
         except:
             print('Could not connect to GDAX.')
+        return client
 
     def get_order_ids(self, history, ignore_products=[]):
         """
