@@ -3,9 +3,13 @@ name: 'nitrocode'
 # Full hyphen delimited social security number or leave empty
 social: '000-00-0000'
 # tax year
-year: 2017
-# use turbo tax?
+year: 2018
+# generate turbo tax file?
 txf: true
+# generate PDFs of Form 8949?
+fill_8949: false
+# generate a spreadsheet with all data and some calculations?
+spreadsheet: true
 
 # view only api keys
 # comment out unused exchanges by prefixing lines with a pound sign #
